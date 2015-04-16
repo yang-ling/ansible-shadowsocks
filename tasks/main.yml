@@ -1,6 +1,6 @@
 ---
 - name: Install Shadowsocks dependencies
-  apt: pkg={{ item }}
+  apt: name={{ item }} state=present cache_valid_time=3600 update_cache=yes
   with_items: shadowsocks_dependencies
 
 - name: Add the Shadowsocks user
@@ -18,7 +18,7 @@
   register: shadowsocks_password
 
 - name: Install Shadowsocks
-  pip: name=shadowsocks
+  pip: name=shadowsocks state=present
 
 - name: Generate Shadowsocks config file
   template: src=config.json.j2

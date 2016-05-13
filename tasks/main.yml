@@ -17,8 +17,11 @@
   command: cat {{ shadowsocks_password_file }}
   register: shadowsocks_password
 
-- name: Install Shadowsocks
-  pip: name=shadowsocks state=present
+- name: Check If Dest Dir Exists
+  file: path={{ ss-dest }} stat=directory mode=0755
+
+- name: Clone Shadowsocks Repo
+  git: repo=git://github.com/shadowsocks/shadowsocks.git dest={{ ss-dest }}
 
 - name: Generate Shadowsocks config file
   template: src=config.json.j2

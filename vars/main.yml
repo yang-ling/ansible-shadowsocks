@@ -5,6 +5,10 @@ shadowsocks_dependencies:
   - python-pip
   - qrencode
   - git
+omz_dependencies:
+  - git
+  - zsh
+  - curl
 
 shadowsocks_location: "/home/shadowsocks"
 shadowsocks_password_file: "{{ shadowsocks_location }}/shadowsocks-password.txt"

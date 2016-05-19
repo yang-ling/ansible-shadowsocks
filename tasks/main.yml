@@ -2,3 +2,4 @@
 # Check whether omz installed already
 
 - include: zsh.yml
+- include: pyenv.yml

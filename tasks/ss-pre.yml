@@ -7,7 +7,13 @@
 - name: Optimize server
   become: yes
   copy: src=99-shadowsocks.conf dest=/etc/sysctl.d/99-shadowsocks.conf owner=root group=root mode=0644
-  notify: Refresh sysctl conf
+  register: optmize_result
+- debug: var=optmize_result
+
+- name: Refresh sysctl conf
+  become: yes
+  command: /sbin/sysctl --system
+  when: optmize_result.changed
 
 - name: Create Shadowsocks Repo folder
   file: path={{ shadowsocks_repo_dest }} state=directory mode=0755

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -x
+
+pushd {{ shadowsocks_location }}
+
+source {{ ansible_user_dir }}/.zshrc
+
+rm -f ss.log
+
+ssserver -c config.json -vv -d start --pid-file ss-pid --log-file ss.log

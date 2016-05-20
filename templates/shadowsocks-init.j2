@@ -16,17 +16,19 @@ PIDFILE=/var/run/shadowsocks.pid
 case "$1" in
   start)
     echo "Starting Shadowsocks"
-    start-stop-daemon --start --chuid shadowsocks --chdir {{ shadowsocks_location }} --background --make-pidfile --pidfile $PIDFILE --exec /usr/local/bin/ssserver -- > /dev/null
+    sudo -u {{ ansible_user_id }} -H /bin/bash -x {{ ansible_user_dir }}/ss-exec/start-server.sh > {{ ansible_user_dir }}/ss-exec/output.log 2>&1
     ;;
   stop)
     echo "Stopping Shadowsocks"
-    start-stop-daemon --stop --pidfile $PIDFILE
+    sudo -u {{ ansible_user_id }} -H /bin/bash -x {{ ansible_user_dir }}/ss-exec/stop-server.sh > {{ ansible_user_dir }}/ss-exec/output.log 2>&1
     ;;
   restart)
-    echo "Restarting Shadowsocks"
-    start-stop-daemon --stop --pidfile $PIDFILE
+    echo "Stopping Shadowsocks"
+    sudo -u {{ ansible_user_id }} -H /bin/bash -x {{ ansible_user_dir }}/ss-exec/stop-server.sh > {{ ansible_user_dir }}/ss-exec/output.log 2>&1
+    echo "Sleep 5 seconds"
     sleep 5
-    start-stop-daemon --start --chuid shadowsocks --chdir {{ shadowsocks_location }} --background --make-pidfile --pidfile $PIDFILE --exec /usr/local/bin/ssserver -- > /dev/null
+    echo "Staring Shadowsocks"
+    sudo -u {{ ansible_user_id }} -H /bin/bash -x {{ ansible_user_dir }}/ss-exec/start-server.sh > {{ ansible_user_dir }}/ss-exec/output.log 2>&1
     ;;
   *)
     echo "Usage: /etc/init.d/shadowsocks {start|stop|restart}"

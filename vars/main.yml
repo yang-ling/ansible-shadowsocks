@@ -24,6 +24,7 @@ python2_dependencies:
   - libncurses5-dev
   - libncursesw5-dev
 
-shadowsocks_location: "/home/shadowsocks"
+shadowsocks_repo_dest: "{{ ansible_env.HOME }}/shadowsocks"
+shadowsocks_location: "{{ ansible_env.HOME }}/ss-exec"
 shadowsocks_password_file: "{{ shadowsocks_location }}/shadowsocks-password.txt"
 shadowsocks_qr_code: "{{ shadowsocks_location }}/shadowsocks-qr-code.png"

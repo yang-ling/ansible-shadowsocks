@@ -1,6 +1,6 @@
 ---
 - name: Check Pyenv Installation
-  shell: source /home/ubuntu/.zshrc &> /dev/null && pyenv versions
+  shell: source {{ ansible_env.HOME }}/.zshrc &> /dev/null && pyenv versions
   args:
     executable: /bin/zsh
   register: is_pyenv_installed
@@ -12,8 +12,8 @@
   when: is_pyenv_installed.rc != 0
 
 - name: Update zshrc - Pyenv Path
-  lineinfile: dest=/home/ubuntu/.zshrc state=present line="export PATH=\"$HOME/.pyenv/bin:$PATH\""
+  lineinfile: dest={{ ansible_env.HOME }}/.zshrc state=present line="export PATH=\"$HOME/.pyenv/bin:$PATH\""
 - name: Update zshrc - Pyenv eval pyenv
-  lineinfile: dest=/home/ubuntu/.zshrc state=present line="eval \"$(pyenv init -)\""
+  lineinfile: dest={{ ansible_env.HOME }}/.zshrc state=present line="eval \"$(pyenv init -)\""
 - name: Update zshrc - Pyenv eval pyenv
-  lineinfile: dest=/home/ubuntu/.zshrc state=present line="eval \"$(pyenv virtualenv-init -)\""
+  lineinfile: dest={{ ansible_env.HOME }}/.zshrc state=present line="eval \"$(pyenv virtualenv-init -)\""

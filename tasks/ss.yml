@@ -1,13 +1,20 @@
 ---
 - name: Install Shadowsocks dependencies
+  become: yes
   apt: name={{ item }} state=present cache_valid_time=3600 update_cache=yes
-  with_items: shadowsocks_dependencies
+  with_items: "{{ shadowsocks_dependencies }}"
 
-- name: Add the Shadowsocks user
-  user: name=shadowsocks
-        home={{ shadowsocks_location }}
-        shell=/usr/sbin/nologin
-        comment="Shadowsocks User"
+- name: Create Shadowsocks Repo folder
+  file: path={{ shadowsocks_repo_dest }} state=directory mode=0755
+
+- name: Create Shadowsocks Exec folder
+  file: path={{ shadowsocks_location }} state=directory mode=0755
+
+- name: Set Shadowsocks Exec Folder Python Version to 2.7.11
+  shell: source {{ ansible_env.HOME }}/.zshrc &> /dev/null && pyenv local 2.7.11
+  args:
+    executable: /bin/zsh
+    chdir: "{{ shadowsocks_location }}"
 
 - name: Generate a random Shadowsocks password
   shell: openssl rand -base64 24 > {{ shadowsocks_password_file }}
@@ -17,42 +24,61 @@
   command: cat {{ shadowsocks_password_file }}
   register: shadowsocks_password
 
-- name: Check If Dest Dir Exists
-  file: path={{ ss-dest }} stat=directory mode=0755
-
 - name: Clone Shadowsocks Repo
-  git: repo=git://github.com/shadowsocks/shadowsocks.git dest={{ ss-dest }} version=master
+  git: repo=https://github.com/shadowsocks/shadowsocks.git dest={{ shadowsocks_repo_dest }} version=master
+
+- name: Build Shadowsocks - Step1 - Setup python version to 2.7.11
+  shell: source {{ ansible_env.HOME }}/.zshrc &> /dev/null && pyenv local 2.7.11
+  args:
+    executable: /bin/zsh
+    chdir: "{{ shadowsocks_repo_dest }}"
+
+- name: Build Shadowsocks - Step2 - Install
+  shell: source {{ ansible_env.HOME }}/.zshrc &> /dev/null && python setup.py install
+  args:
+    executable: /bin/zsh
+    chdir: "{{ shadowsocks_repo_dest }}"
 
 - name: Generate Shadowsocks config file
   template: src=config.json.j2
             dest={{ shadowsocks_location }}/config.json
-            owner=shadowsocks
-            group=shadowsocks
-            mode=640
+            mode=0640
+  notify: Restart Shadowsocks
+
+- name: Generate Shadowsocks start script
+  template: src=start-server.sh.j2
+            dest={{ shadowsocks_location }}/start-server.sh
+            mode=0755
+  notify: Restart Shadowsocks
+
+- name: Generate Shadowsocks stop script
+  template: src=stop-server.sh.j2
+            dest={{ shadowsocks_location }}/stop-server.sh
+            mode=0755
   notify: Restart Shadowsocks
 
 - name: Generate Shadowsocks init script
+  become: yes
   template: src=shadowsocks-init.j2
             dest=/etc/init.d/shadowsocks
             owner=root
             group=root
             mode=755
+  notify: Restart Shadowsocks
 
 - name: Enable the Shadowsocks init script so the service will start at boot
+  become: yes
   command: update-rc.d shadowsocks defaults
-           creates=/etc/rc0.d/K01shadowsocks
 
 - name: Generate the Shadowsocks QR code
   # The ss:// URI format is documented here:
   #   http://shadowsocks.org/en/config/quick-guide.html
-  shell: echo -n '{{ shadowsocks_encryption_method }}:{{ shadowsocks_password.stdout }}@{{ ansible_default_ipv4.address }}:{{ shadowsocks_server_port }}' | base64 --wrap=0 | sed 's/^/ss:\/\//' | qrencode -s 15 -o {{ shadowsocks_qr_code }}
+  shell: echo -n '{{ shadowsocks_encryption_method }}:{{ shadowsocks_password.stdout }}@{{ shadowsocks_server_ip }}:{{ shadowsocks_server_port }}' | base64 --wrap=0 | sed 's/^/ss:\/\//' | qrencode -s 15 -o {{ shadowsocks_qr_code }}
          creates={{ shadowsocks_qr_code }}
 
 - name: Set permissions on the QR code image and Shadowsocks password file
   file: path={{ item }}
-        owner=shadowsocks
-        group=shadowsocks
-        mode=640
+        mode=0640
   with_items:
     - "{{ shadowsocks_password_file }}"
     - "{{ shadowsocks_qr_code }}"

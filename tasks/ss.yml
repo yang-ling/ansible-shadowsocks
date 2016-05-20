@@ -1,21 +1,4 @@
 ---
-- name: Install Shadowsocks dependencies
-  become: yes
-  apt: name={{ item }} state=present cache_valid_time=3600 update_cache=yes
-  with_items: "{{ shadowsocks_dependencies }}"
-
-- name: Create Shadowsocks Repo folder
-  file: path={{ shadowsocks_repo_dest }} state=directory mode=0755
-
-- name: Create Shadowsocks Exec folder
-  file: path={{ shadowsocks_location }} state=directory mode=0755
-
-- name: Set Shadowsocks Exec Folder Python Version to 2.7.11
-  shell: source {{ ansible_env.HOME }}/.zshrc &> /dev/null && pyenv local 2.7.11
-  args:
-    executable: /bin/zsh
-    chdir: "{{ shadowsocks_location }}"
-
 - name: Generate a random Shadowsocks password
   shell: openssl rand -base64 24 > {{ shadowsocks_password_file }}
          creates={{ shadowsocks_password_file }}

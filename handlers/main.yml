@@ -3,3 +3,7 @@
   become: yes
   service: name=shadowsocks
            state=restarted
+
+- name: Refresh sysctl conf
+  become: yes
+  command: /sbin/sysctl --system

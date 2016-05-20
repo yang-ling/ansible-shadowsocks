@@ -1,7 +1,9 @@
 ---
 # Check whether omz installed already
 
-#- include: zsh.yml
-#- include: pyenv.yml
-#- include: python2-7-11.yml
+- include: zsh.yml
+- include: pyenv.yml
+- include: python2-7-11.yml
+- include: ss-pre.yml
 - include: ss.yml
+- include: ss-post.yml

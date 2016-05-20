@@ -3,3 +3,4 @@
 
 - include: zsh.yml
 - include: pyenv.yml
+- include: python2-7-11.yml

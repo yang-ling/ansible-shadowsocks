@@ -9,6 +9,20 @@ omz_dependencies:
   - git
   - zsh
   - curl
+python2_dependencies:
+  - make
+  - gcc
+  - build-essential
+  - libssl-dev
+  - zlib1g-dev
+  - libbz2-dev
+  - libreadline-dev
+  - libsqlite3-dev
+  - wget
+  - curl
+  - llvm
+  - libncurses5-dev
+  - libncursesw5-dev
 
 shadowsocks_location: "/home/shadowsocks"
 shadowsocks_password_file: "{{ shadowsocks_location }}/shadowsocks-password.txt"

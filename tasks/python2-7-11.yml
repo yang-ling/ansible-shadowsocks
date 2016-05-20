@@ -1,0 +1,18 @@
+---
+- name: Install python2.7.11 dependencies
+  apt: name={{ item }} state=present cache_valid_time=3600 update_cache=yes
+  become: yes
+  with_items: "{{ python2_dependencies }}"
+
+- name: Check whether 2.7.11 installed
+  shell: source /home/ubuntu/.zshrc &> /dev/null && pyenv versions
+  args:
+    executable: /bin/zsh
+  register: output
+- debug: var=output
+
+- name: Build python 2.7.11
+  shell: source /home/ubuntu/.zshrc &> /dev/null && pyenv install 2.7.11 > /home/ubuntu/pyenv.log 2>&1
+  args:
+    executable: /bin/zsh
+  when: output.stdout.find("2.7.11") < 0

@@ -1,5 +1,7 @@
 ---
-shadowsocks_server_port: "8388"
+shadowsocks_server_ip: "0.0.0.0"
+shadowsocks_server_inner_port: "8188"
+shadowsocks_server_outter_port: "53"
 shadowsocks_local_port: "1080"
 shadowsocks_timeout: "600"
-shadowsocks_encryption_method: "aes-256-cfb"
+shadowsocks_encryption_method: "rc4-md5"

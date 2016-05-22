@@ -1,0 +1,74 @@
+---
+- name: Generate a random Shadowsocks password
+  shell: openssl rand -base64 24 > {{ shadowsocks_password_file }}
+         creates={{ shadowsocks_password_file }}
+
+- name: Register Shadowsocks password
+  command: cat {{ shadowsocks_password_file }}
+  register: shadowsocks_password
+
+- name: Clone Shadowsocks Repo
+  git: repo=https://github.com/shadowsocks/shadowsocks.git dest={{ shadowsocks_repo_dest }} version=master
+
+- name: Build Shadowsocks - Step1 - Setup python version to 2.7.11
+  shell: source {{ ansible_env.HOME }}/.zshrc &> /dev/null && pyenv local 2.7.11
+  args:
+    executable: /bin/zsh
+    chdir: "{{ shadowsocks_repo_dest }}"
+
+- name: Build Shadowsocks - Step2 - Install
+  shell: source {{ ansible_env.HOME }}/.zshrc &> /dev/null && python setup.py install
+  args:
+    executable: /bin/zsh
+    chdir: "{{ shadowsocks_repo_dest }}"
+
+- name: Generate Shadowsocks config file
+  template: src=config.json.j2
+            dest={{ shadowsocks_location }}/config.json
+            mode=0640
+  notify: Restart Shadowsocks
+
+- name: Generate Shadowsocks start script
+  template: src=start-server.sh.j2
+            dest={{ shadowsocks_location }}/start-server.sh
+            mode=0755
+  notify: Restart Shadowsocks
+
+- name: Generate Shadowsocks stop script
+  template: src=stop-server.sh.j2
+            dest={{ shadowsocks_location }}/stop-server.sh
+            mode=0755
+  notify: Restart Shadowsocks
+
+- name: Generate Shadowsocks init script
+  become: yes
+  template: src=shadowsocks-init.j2
+            dest=/etc/init.d/shadowsocks
+            owner=root
+            group=root
+            mode=755
+  notify: Restart Shadowsocks
+
+- name: Enable the Shadowsocks init script so the service will start at boot
+  become: yes
+  command: update-rc.d shadowsocks defaults
+
+- name: Generate the Shadowsocks QR code
+  # The ss:// URI format is documented here:
+  #   http://shadowsocks.org/en/config/quick-guide.html
+  shell: echo -n '{{ shadowsocks_encryption_method }}:{{ shadowsocks_password.stdout }}@{{ shadowsocks_server_ip }}:{{ shadowsocks_server_outter_port }}' | base64 --wrap=0 | sed 's/^/ss:\/\//' | qrencode -s 15 -o {{ shadowsocks_qr_code }}
+
+- name: Set permissions on the QR code image and Shadowsocks password file
+  file: path={{ item }}
+        mode=0640
+  with_items:
+    - "{{ shadowsocks_password_file }}"
+    - "{{ shadowsocks_qr_code }}"
+
+- name: Fetch the QR code image
+  fetch: dest=/tmp/
+         src={{ shadowsocks_qr_code }}
+         flat=yes
+
+- name: Pause for explanation
+  pause: prompt="Your randomly chosen Shadowsocks password is '{{ shadowsocks_password.stdout }}'. A custom QR code that can be used to automatically configure your Shadowsocks clients has been downloaded to /tmp/shadowsocks-qr-code.png. Simply scan this image to get up and running quickly. Look for the option when creating a new profile in the iOS and Android applications. Press any key to continue..."

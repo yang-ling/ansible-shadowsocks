@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -x
+
+pushd {{ shadowsocks_repo_dest }}
+
+source {{ ansible_user_dir }}/.zshrc
+
+python utils/autoban.py < {{ shadowsocks_location }}/ss.log

@@ -1,0 +1,10 @@
+---
+- name: Install Auto Ban bad IP Script
+  template: src=autoban.sh.j2
+            dest={{ shadowsocks_location }}/autoban.sh
+            mode=0755
+
+- name: Setup Cron Job for Auto Ban
+  cron: name="Setup Cron Job for Auto Ban"
+    special_time=hourly user={{ ansible_user_id }} state=present
+    job="/bin/bash -x {{ shadowsocks_location }}/autoban.sh > {{ shadowsocks_location }}/autoban.log 2>&1"

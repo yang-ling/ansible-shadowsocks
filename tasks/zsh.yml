@@ -1,0 +1,40 @@
+---
+# Install oh-my-zsh
+
+# Install dependencies
+- name: Install oh-my-zsh dependencies
+  apt: name={{ item }} state=present cache_valid_time=3600 update_cache=yes
+  become: yes
+  with_items: "{{ omz_dependencies }}"
+
+- name: Check OMZ Installation
+  stat: path={{ ansible_env.HOME }}/.oh-my-zsh
+  register: omz
+
+- name: Install OMZ
+  shell: /bin/sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)" > {{ ansible_env.HOME }}/omz.log 2>&1
+  async: 60
+  when: not omz.stat.exists
+
+- name: Is OMZ Installation successful
+  wait_for: path={{ ansible_env.HOME }}/.zshrc
+  when: not omz.stat.exists
+
+- name: Change default shell to zsh
+  become: yes
+  user: name=ubuntu shell=/bin/zsh
+
+- name: Modify zshrc - Theme
+  lineinfile: dest={{ ansible_env.HOME }}/.zshrc regexp="^ZSH_THEME=" state=present line="ZSH_THEME=\"random\""
+- name: Modify zshrc - Auto Title
+  lineinfile: dest={{ ansible_env.HOME }}/.zshrc regexp="^DISABLE_AUTO_TITLE=" state=present line="DISABLE_AUTO_TITLE=\"true\""
+- name: Modify zshrc - Waiting Dots
+  lineinfile: dest={{ ansible_env.HOME }}/.zshrc regexp="^COMPLETION_WAITING_DOTS=" state=present line="COMPLETION_WAITING_DOTS=\"true\""
+- name: Modify zshrc - Disable untracked files dirty
+  lineinfile: dest={{ ansible_env.HOME }}/.zshrc regexp="^DISABLE_UNTRACKED_FILES_DIRTY=" state=present line="DISABLE_UNTRACKED_FILES_DIRTY=\"true\""
+- name: Modify zshrc - History Stamps
+  lineinfile: dest={{ ansible_env.HOME }}/.zshrc regexp="^HIST_STAMPS=" state=present line="HIST_STAMPS=\"yyyy-mm-dd\""
+- name: Modify zshrc - Plugins
+  lineinfile: dest={{ ansible_env.HOME }}/.zshrc regexp="^plugins=" state=present line="plugins=(common-aliases git history history-substring-search iwhois sudo systemadmin)"
+- name: Modify zshrc - Editor
+  lineinfile: dest={{ ansible_env.HOME }}/.zshrc state=present line="export EDITOR=\"/usr/bin/vim\""

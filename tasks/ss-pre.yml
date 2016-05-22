@@ -1,0 +1,28 @@
+---
+- name: Install Shadowsocks dependencies
+  become: yes
+  apt: name={{ item }} state=present cache_valid_time=3600 update_cache=yes
+  with_items: "{{ shadowsocks_dependencies }}"
+
+- name: Optimize server
+  become: yes
+  copy: src=99-shadowsocks.conf dest=/etc/sysctl.d/99-shadowsocks.conf owner=root group=root mode=0644
+  register: optmize_result
+- debug: var=optmize_result
+
+- name: Refresh sysctl conf
+  become: yes
+  command: /sbin/sysctl --system
+  when: optmize_result.changed
+
+- name: Create Shadowsocks Repo folder
+  file: path={{ shadowsocks_repo_dest }} state=directory mode=0755
+
+- name: Create Shadowsocks Exec folder
+  file: path={{ shadowsocks_location }} state=directory mode=0755
+
+- name: Set Shadowsocks Exec Folder Python Version to 2.7.11
+  shell: source {{ ansible_env.HOME }}/.zshrc &> /dev/null && pyenv local 2.7.11
+  args:
+    executable: /bin/zsh
+    chdir: "{{ shadowsocks_location }}"

@@ -13,20 +13,30 @@
 
 PIDFILE=/var/run/shadowsocks.pid
 
+ss_start() {
+    echo "Starting Shadowsocks"
+    iptables -t nat -A PREROUTING -p tcp --dport {{ shadowsocks_server_outter_port }} -j REDIRECT --to-ports {{ shadowsocks_server_inner_port }}
+    sudo -u {{ ansible_user_id }} -H /bin/bash -x {{ ansible_user_dir }}/ss-exec/start-server.sh > {{ ansible_user_dir }}/ss-exec/output.log 2>&1
+}
+
+ss_stop() {
+    echo "Stopping Shadowsocks"
+    iptables -t nat -D PREROUTING -p tcp --dport {{ shadowsocks_server_outter_port }} -j REDIRECT --to-ports {{ shadowsocks_server_inner_port }}
+    sudo -u {{ ansible_user_id }} -H /bin/bash -x {{ ansible_user_dir }}/ss-exec/stop-server.sh > {{ ansible_user_dir }}/ss-exec/output.log 2>&1
+}
+
 case "$1" in
   start)
-    echo "Starting Shadowsocks"
-    start-stop-daemon --start --chuid shadowsocks --chdir {{ shadowsocks_location }} --background --make-pidfile --pidfile $PIDFILE --exec /usr/local/bin/ssserver -- > /dev/null
+      ss_start
     ;;
   stop)
-    echo "Stopping Shadowsocks"
-    start-stop-daemon --stop --pidfile $PIDFILE
+      ss_stop
     ;;
   restart)
-    echo "Restarting Shadowsocks"
-    start-stop-daemon --stop --pidfile $PIDFILE
-    sleep 5
-    start-stop-daemon --start --chuid shadowsocks --chdir {{ shadowsocks_location }} --background --make-pidfile --pidfile $PIDFILE --exec /usr/local/bin/ssserver -- > /dev/null
+      ss_stop
+      echo "Sleep 5 seconds"
+      sleep 5
+      ss_start
     ;;
   *)
     echo "Usage: /etc/init.d/shadowsocks {start|stop|restart}"

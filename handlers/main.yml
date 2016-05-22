@@ -1,4 +1,6 @@
 ---
 - name: Restart Shadowsocks
+  become: yes
   service: name=shadowsocks
            state=restarted
+

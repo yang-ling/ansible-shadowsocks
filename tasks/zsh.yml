@@ -22,7 +22,7 @@
 
 - name: Change default shell to zsh
   become: yes
-  user: name=ubuntu shell=/bin/zsh
+  user: name={{ ansible_user_id }} shell=/bin/zsh
 
 - name: Modify zshrc - Theme
   lineinfile: dest={{ ansible_env.HOME }}/.zshrc regexp="^ZSH_THEME=" state=present line="ZSH_THEME=\"random\""
